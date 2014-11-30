@@ -13,15 +13,17 @@ window.template = function( id ){
 
 // Model
 App.Models.Task = Backbone.Model.extend({
-
+    validate: function( attrs ){
+        if( ! $.trim( attrs.title ) ){
+            return 'A task requires a valid title';
+        }
+    }
 });
 
 // Collection
-App.Collections.Tasks = Backbone.Collection.extend(
-    { 
-        model: App.Models.Task
-});
+App.Collections.Tasks = Backbone.Collection.extend( {model: App.Models.Task} );
 
+// Views Plural
 App.Views.Tasks = Backbone.View.extend({
 
     tagName: 'ul',
@@ -43,8 +45,41 @@ App.Views.Task = Backbone.View.extend({
 
     tagName: 'li',
 
+    template: template( 'taskTemplate' ),
+
+    events: {
+        'click .edit': 'editTask',
+        'click .delete': 'destroyTask'
+    },
+
+    initialize: function(){
+
+        this.model.on( 'change', this.render, this );
+        this.model.on( 'destroy', this.remove, this );
+
+    },
+
+    editTask: function(){
+
+        var newTaskTitle = prompt( 'What would you like to change the text to?', this.model.get( 'title' ) );
+
+        if( !newTaskTitle ) return;
+
+        this.model.set( 'title', newTaskTitle, { validate: true } );
+    },
+
+    destroyTask: function(){
+        this.model.destroy();
+    },
+
+    // better to use events to track removal - accounts for db failures as it waits for confirmation.
+    remove: function(){
+        this.$el.remove();
+    },
+
     render: function(){
-        this.$el.html( this.model.get( 'title' ) );
+        var template = this.template( this.model.toJSON() );
+        this.$el.html( template );
         return this;
     }
 
@@ -67,6 +102,6 @@ var task = new App.Collections.Tasks([
 
 var tasksView = new App.Views.Tasks({ collection: task });
 
-$('.tasks').html( tasksView.render().el )
+$( '.tasks' ).html( tasksView.render().el )
 
 })();
