@@ -28,6 +28,10 @@ App.Views.Tasks = Backbone.View.extend({
 
     tagName: 'ul',
 
+    initialize: function(){
+        this.collection.on( 'add', this.addOne, this );
+    },
+
     render: function(){
         this.collection.each( this.addOne, this );
         return this;
@@ -85,7 +89,35 @@ App.Views.Task = Backbone.View.extend({
 
 });
 
-var task = new App.Collections.Tasks([
+// View Add Task
+App.Views.AddTask = Backbone.View.extend({
+    // using an existing element as the template
+    el: '#addTask',
+
+    events: {
+        'submit': 'submit'
+    },
+
+    initialize: function(){
+
+    },
+
+    submit: function( e ){
+
+        e.preventDefault();
+
+        var newTaskTitle = $(e.currentTarget).find('input[type=text]').val();
+
+        var task = new App.Models.Task({ title: newTaskTitle });
+
+        this.collection.add( task );
+
+    }
+
+});
+
+// Set Up the Array of Data
+var tasksCollection = new App.Collections.Tasks([
     {
         title: 'Go to the Store',
         priority: 4
@@ -100,7 +132,9 @@ var task = new App.Collections.Tasks([
     }
 ]);
 
-var tasksView = new App.Views.Tasks({ collection: task });
+var addTaskView = new App.Views.AddTask({ collection: tasksCollection });
+
+var tasksView = new App.Views.Tasks({ collection: tasksCollection });
 
 $( '.tasks' ).html( tasksView.render().el )
 
